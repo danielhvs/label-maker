@@ -1,36 +1,18 @@
 # label-maker
 
-FIXME: description
-
-## Installation
-
-Download from http://example.com/FIXME.
+A Quil sketch designed to ... well, that part is up to you.
 
 ## Usage
 
-FIXME: explanation
+LightTable - open `core.clj` and press `Ctrl+Shift+Enter` to evaluate the file.
 
-    $ java -jar label-maker-0.1.0-standalone.jar [args]
+Emacs - run cider, open `core.clj` and press `C-c C-k` to evaluate the file.
 
-## Options
-
-FIXME: listing of options this app accepts.
-
-## Examples
-
-...
-
-### Bugs
-
-...
-
-### Any Other Sections
-### That You Think
-### Might be Useful
+REPL - run `(require 'label-maker.core)`.
 
 ## License
 
-Copyright © 2019 FIXME
+Copyright © 2016 FIXME
 
 Distributed under the Eclipse Public License either version 1.0 or (at
 your option) any later version.

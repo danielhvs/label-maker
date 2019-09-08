@@ -3,10 +3,5 @@
   :url "http://example.com/FIXME"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :dependencies [
-                 [org.clojure/clojure "1.8.0"]
-                 [net.mikera/imagez "0.12.0"]
-                 ]
-  :main ^:skip-aot label-maker.core
-  :target-path "target/%s"
-  :profiles {:uberjar {:aot :all}})
+  :dependencies [[org.clojure/clojure "1.9.0"]
+                 [quil "3.0.0"]])

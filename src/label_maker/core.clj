@@ -1,10 +1,14 @@
 (ns label-maker.core
-  (:require [mikera.image.core :refer [load-image-resource show new-image]])
+  (:require [mikera.image.core :refer [resize load-image-resource show new-image]])
   (:gen-class))
 
-(defn carrega [nome-arquivo]
+(defn load [nome-arquivo]
   (load-image-resource nome-arquivo))
+
+(defn make-labels [filename w h]
+  (let [image (load filename)]
+    (resize image w h)))
 
 (defn -main
   [& args]
-  (show (carrega "test.png") :title "oi"))
+  (show (make-labels "test.png" 300 100)))

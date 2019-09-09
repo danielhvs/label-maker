@@ -30,13 +30,13 @@
    :all-pos (into [] (calculate-pos W H 3 3))
    })
 
-(defn update-state [state]
+(defn update [state]
   {:image (:image state)
    :all-pos (pop (:all-pos state))
    :pos (peek (:all-pos state))
    })
 
-(defn draw-state [state]
+(defn draw [state]
   (let [img (:image state)]
     (when (q/loaded? img)
       (when-let [p (:pos state)]
@@ -48,9 +48,9 @@
   :size [W H]
   ; setup function called only once, during sketch initialization.
   :setup setup
-  ; update-state is called on each iteration before draw-state.
-  :update update-state
-  :draw draw-state
+  ; update is called on each iteration before draw.
+  :update update
+  :draw draw
   :features [:keep-on-top]
   ; This sketch uses functional-mode middleware.
   ; Check quil wiki for more info about middlewares and particularly

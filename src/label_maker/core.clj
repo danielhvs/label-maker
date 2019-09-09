@@ -9,13 +9,13 @@
 
 (def W (int (mm-to-px 210)))
 (def H (int (mm-to-px 297)))
-(def QTD-W 5)
-(def QTD-H 1)
+(def QTD-W 9)
+(def QTD-H 12)
 
-(defn calculate-pos [w h qtd-w qtd-h]
+(defn calculate-pos [w h qtd-w qtd-h size-w size-h]
   (let [
-        h-size (quot h qtd-h)
-        w-size (quot w qtd-w)
+        h-size (max size-h (quot h qtd-h))
+        w-size (max size-w (quot w qtd-w))
         ]
     (let [ys (filter #(= 0 (rem % h-size)) (range h))
           xs (filter #(= 0 (rem % w-size)) (range w))]
@@ -35,7 +35,7 @@
   (let [img (:image state)
         next {:image img}]
     (if (q/loaded? img)
-      {:image img :all-pos (calculate-pos W H QTD-W QTD-H)}
+      {:image img :all-pos (calculate-pos W H QTD-W QTD-H (.width img) (.height img))}
       {:image img}))
   )
 

@@ -10,7 +10,7 @@
 (def W (int (mm-to-px 210)))
 (def H (int (mm-to-px 297)))
 (def QTD-W 5)
-(def QTD-H 10)
+(def QTD-H 1)
 
 (defn calculate-pos [w h qtd-w qtd-h]
   (let [
@@ -24,29 +24,32 @@
 
 (defn setup []
   ; Set frame rate frames per second.
-  (q/frame-rate 60)
+  (q/frame-rate 10)
   ; Set color mode to HSB (HSV) instead of default RGB.
   (q/color-mode :hsb)
   ; setup function returns initial state. It contains
   ; circle color and position.
-  {:image (q/load-image "resources/test.png")
-   :all-pos (calculate-pos W H QTD-W QTD-H)
-   })
+  {:image (q/load-image "resources/test.png")})
 
 (defn update [state]
-  {})
+  (let [img (:image state)
+        next {:image img}]
+    (if (q/loaded? img)
+      {:image img :all-pos (calculate-pos W H QTD-W QTD-H)}
+      {:image img}))
+  )
 
 (defn draw-labels [state]
   (let [img (:image state)]
-    (when (q/loaded? img)
-      (when-let [all-pos (:all-pos state)]
-        (doall
-         (map #(q/image img (first %) (second %)) all-pos))))))
+    (when-let [all-pos (:all-pos state)]
+      (doall
+       (map #(q/image img (first %) (second %)) all-pos)))))
 
 (defn draw [state]
-  (q/do-record (q/create-graphics W H :pdf "out.pdf")
-               (draw-labels state))
-  (q/exit))
+  (when (:all-pos state)
+    (q/do-record (q/create-graphics W H :pdf "out.pdf")
+                 (draw-labels state))
+    (q/exit)))
 
 (q/defsketch label-maker
   :title "Label Maker"

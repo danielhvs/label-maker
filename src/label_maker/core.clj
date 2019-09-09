@@ -27,21 +27,18 @@
   ; setup function returns initial state. It contains
   ; circle color and position.
   {:image (q/load-image "resources/test.png")
-   :all-pos (into [] (calculate-pos W H 3 3))
+   :all-pos (calculate-pos W H 5 9)
    })
 
 (defn update [state]
-  {:image (:image state)
-   :all-pos (pop (:all-pos state))
-   :pos (peek (:all-pos state))
-   })
+  {})
 
 (defn draw [state]
   (let [img (:image state)]
     (when (q/loaded? img)
-      (when-let [p (:pos state)]
-        (q/image img (first p) (second p)))
-)))
+      (when-let [all-pos (:all-pos state)]
+        (doall
+         (map #(q/image img (first %) (second %)) all-pos))))))
 
 (q/defsketch label-maker
   :title "Label Maker"

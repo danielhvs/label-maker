@@ -2,8 +2,12 @@
   (:require [quil.core :as q]
             [quil.middleware :as m]))
 
-(def W 400)
-(def H 400)
+;; A4 paper size
+(defn mm-to-px
+  [mm]
+  (/ (* mm 72) 25.4))
+(def W (int (mm-to-px 210)))
+(def H (int (mm-to-px 297)))
 
 (defn calculate-pos [w h qtd-w qtd-h]
   (let [

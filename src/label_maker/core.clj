@@ -6,8 +6,11 @@
 (defn mm-to-px
   [mm]
   (/ (* mm 72) 25.4))
+
 (def W (int (mm-to-px 210)))
 (def H (int (mm-to-px 297)))
+(def QTD-W 5)
+(def QTD-H 10)
 
 (defn calculate-pos [w h qtd-w qtd-h]
   (let [
@@ -27,18 +30,23 @@
   ; setup function returns initial state. It contains
   ; circle color and position.
   {:image (q/load-image "resources/test.png")
-   :all-pos (calculate-pos W H 5 9)
+   :all-pos (calculate-pos W H QTD-W QTD-H)
    })
 
 (defn update [state]
   {})
 
-(defn draw [state]
+(defn draw-labels [state]
   (let [img (:image state)]
     (when (q/loaded? img)
       (when-let [all-pos (:all-pos state)]
         (doall
          (map #(q/image img (first %) (second %)) all-pos))))))
+
+(defn draw [state]
+  (q/do-record (q/create-graphics W H :pdf "out.pdf")
+               (draw-labels state))
+  (q/exit))
 
 (q/defsketch label-maker
   :title "Label Maker"

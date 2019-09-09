@@ -2,23 +2,28 @@
   (:require [quil.core :as q]
             [quil.middleware :as m]))
 
-(defn load-pos []
-  [
-   [0 0] [0 50] [0 100]
-   [50 0] [50 50] [50 100]
-   [100 0] [100 50] [100 100]
-   [150 0] [150 50] [150 100]
-   ])
+(def W 400)
+(def H 400)
+
+(defn calculate-pos [w h qtd-w qtd-h]
+  (let [
+        h-size (quot h qtd-h)
+        w-size (quot w qtd-w)
+        ]
+    (let [ys (filter #(= 0 (rem % h-size)) (range h))
+          xs (filter #(= 0 (rem % w-size)) (range w))]
+      (for [x xs y ys]
+        [x y])))) 
 
 (defn setup []
-  ; Set frame rate to 30 frames per second.
-  (q/frame-rate 30)
+  ; Set frame rate frames per second.
+  (q/frame-rate 60)
   ; Set color mode to HSB (HSV) instead of default RGB.
   (q/color-mode :hsb)
   ; setup function returns initial state. It contains
   ; circle color and position.
   {:image (q/load-image "resources/test.png")
-   :all-pos (load-pos)
+   :all-pos (into [] (calculate-pos W H 3 3))
    })
 
 (defn update-state [state]
@@ -35,8 +40,8 @@
 )))
 
 (q/defsketch label-maker
-  :title "You spin my circle right round"
-  :size [500 500]
+  :title "Label Maker"
+  :size [W H]
   ; setup function called only once, during sketch initialization.
   :setup setup
   ; update-state is called on each iteration before draw-state.

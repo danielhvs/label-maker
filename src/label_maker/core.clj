@@ -9,8 +9,7 @@
 
 (def W (int (mm-to-px 210)))
 (def H (int (mm-to-px 297)))
-(def QTD-W 9)
-(def QTD-H 12)
+(def ENTER 10)
 
 (defn calculate-pos [w h qtd-w qtd-h size-w size-h]
   (let [
@@ -29,27 +28,61 @@
   (q/color-mode :hsb)
   ; setup function returns initial state. It contains
   ; circle color and position.
-  {:image (q/load-image "resources/test.png")})
+  {:image (q/load-image "resources/test.png")
+   :qtd-w 1
+   :qtd-h 1})
+
+(defn key-to-offset-w [key]
+  (case (:key key)
+    :left dec
+    :right inc
+    identity))
+
+(defn key-to-offset-h [key]
+  (case (:key key)
+    :up dec
+    :down inc
+    identity))
+
+(defn the-key-handler [state k]
+  (do (.println System/out k)
+    (assoc state 
+      :qtd-w ((key-to-offset-w k) (:qtd-w state))
+      :qtd-h ((key-to-offset-h k) (:qtd-h state))
+      :done (= ENTER (:key-code k)))))
 
 (defn update [state]
   (let [img (:image state)
-        next {:image img}]
+        next {:image img}
+        qtd-w (:qtd-w state)
+        qtd-h (:qtd-h state)]
     (if (q/loaded? img)
-      {:image img :all-pos (calculate-pos W H QTD-W QTD-H (.width img) (.height img))}
-      {:image img}))
-  )
+      {:image img 
+       :all-pos (calculate-pos W H qtd-w qtd-h (.width img) (.height img))
+       :qtd-w qtd-w
+       :qtd-h qtd-h
+       :done (:done state)}
+      {:image img
+       :qtd-w qtd-w
+       :qtd-h qtd-h
+       :done (:done state)})))
 
 (defn draw-labels [state]
   (let [img (:image state)]
     (when-let [all-pos (:all-pos state)]
-      (doall
-       (map #(q/image img (first %) (second %)) all-pos)))))
+      (do
+        (q/background 255)
+        (doall
+         (map #(q/image img (first %) (second %)) all-pos))))))
 
 (defn draw [state]
   (when (:all-pos state)
-    (q/do-record (q/create-graphics W H :pdf "out.pdf")
-                 (draw-labels state))
-    (q/exit)))
+    (if (:done state)
+      (do
+        (q/do-record (q/create-graphics W H :pdf "out.pdf")
+                     (draw-labels state))
+        (q/exit)) 
+      (draw-labels state))))
 
 (q/defsketch label-maker
   :title "Label Maker"
@@ -60,7 +93,8 @@
   :update update
   :draw draw
   :features [:keep-on-top]
+  :key-pressed the-key-handler
   ; This sketch uses functional-mode middleware.
   ; Check quil wiki for more info about middlewares and particularly
   ; fun-mode.
-  :middleware [m/fun-mode])
+  :middleware [m/fun-mode m/pause-on-error])

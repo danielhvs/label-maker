@@ -46,8 +46,8 @@
 
 (defn the-key-handler [state k]
   (assoc state 
-    :qtd-w ((key-to-offset-w k) (:qtd-w state))
-    :qtd-h ((key-to-offset-h k) (:qtd-h state))
+    :qtd-w (max 1 ((key-to-offset-w k) (:qtd-w state)))
+    :qtd-h (max 1 ((key-to-offset-h k) (:qtd-h state)))
     :done (= ENTER (:key-code k))))
 
 (defn update [state]

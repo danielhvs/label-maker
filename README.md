@@ -5,7 +5,7 @@ This is a toy project to learn Quil.
 
 ## Start
 
-`lein run` or use your favorite repl tool (emacs, vim etc).
+`lein run` or use your favorite repl tool (emacs+cider, vim+conjure|fireplace etc).
 
 ## Commands
 

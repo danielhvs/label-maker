@@ -1,18 +1,13 @@
-# label-maker
+# Label Maker
 
-A Quil sketch designed to ... well, that part is up to you.
+A Quil sketch designed to generate a pdf file (A4 paper size) with some labels.
+This is a toy project to learn Quil.
 
-## Usage
+## Start
 
-LightTable - open `core.clj` and press `Ctrl+Shift+Enter` to evaluate the file.
+`lein run` or use your favorite repl tool (emacs, vim etc).
 
-Emacs - run cider, open `core.clj` and press `C-c C-k` to evaluate the file.
+## Commands
 
-REPL - run `(require 'label-maker.core)`.
-
-## License
-
-Copyright © 2016 FIXME
-
-Distributed under the Eclipse Public License either version 1.0 or (at
-your option) any later version.
+  - Arrow Keys: Increment or decrement number of labels
+  - Enter: Generate a pdf file.

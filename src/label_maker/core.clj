@@ -56,7 +56,6 @@
 (defn update [state]
   (println "state:" state)
   (let [img   (:image state)
-        next  {:image img}
         qtd-w (:qtd-w state)
         qtd-h (:qtd-h state)]
     (if (q/loaded? img)
@@ -75,17 +74,16 @@
     (when-let [all-pos (:all-pos state)]
       (do
         (q/background 255)
-        (doall
-         (map #(q/image img (first %) (second %)) all-pos))))))
+        (mapv #(q/image img (first %) (second %)) all-pos)))))
 
 (defn draw [state]
+  (println "state:" state)
   (when (:all-pos state)
-    (if (:done state)
-      (do
-        (q/do-record (q/create-graphics W H :pdf "out.pdf")
-                     (draw-labels state))
-        (q/exit))
-      (draw-labels state))))
+    (when (:done state)
+      (q/do-record (q/create-graphics W H :pdf "out.pdf")
+                   (draw-labels state))
+      (q/exit))
+    (draw-labels state)))
 
 (defn -main
   "Args: file-path (optional)"

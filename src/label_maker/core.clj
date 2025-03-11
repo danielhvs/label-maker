@@ -52,9 +52,14 @@
 
 (def arbitrary-positions
   "x y w h"
-  [[0 0 105 0]
-   [105 0 210 0]
-   [0 150 385 0]])
+  (let [first-w 90
+        f1      2.25
+        f2      1.5
+        f3      1.25]
+    [[0 0 first-w 0]
+     [105 0 (* first-w f1) 0]
+     [285 0 (* first-w f1 f2) 0 0]
+     [0 385 (* first-w f1 f2 f3) 0 0]]))
 
 (defn setup-fn [picture]
   (q/frame-rate 10)

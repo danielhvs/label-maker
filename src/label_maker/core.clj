@@ -73,13 +73,15 @@
 (defn the-key-handler [state k]
   (assoc state :done (= ENTER (:key-code k))))
 
-(defn update-imgs!  [imgs]
-  (let [res (mapv (fn [img [x y w h]]
-                    (merge img {:w w :x x :y y :h h}))
-                  imgs
-                  [[0 0 10 10] [20 20 20 20]])]
-    (println "update-imgsres:" res)
-    res))
+(def posss
+  "x y w h"
+  [[0 0 10 10] [20 20 20 20]])
+
+(defn update-images  [imgs]
+  (mapv (fn [img [x y w h]]
+          (merge img {:w w :x x :y y :h h}))
+        imgs
+        posss))
 
 #_(:ready-to-draw state)
 
@@ -95,7 +97,7 @@
         loaded? (count (map :ready? (map check-loaded imgs)))]
     (if (= loaded? 2)
       (let [new-state (-> state
-                          (update :images update-imgs!)
+                          (update :images update-images)
                           (assoc :ready-to-draw true))]
         (when-not (:resized state)
           (run! (fn [{:keys [img w h]}] (q/resize img w h))

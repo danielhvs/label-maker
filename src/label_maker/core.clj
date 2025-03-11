@@ -74,7 +74,9 @@
     (when-let [all-pos (:all-pos state)]
       (do
         (q/background 255)
-        (mapv #(q/image img (first %) (second %)) all-pos)))))
+        (mapv (fn draw [[x y]]
+                (q/image img x y))
+              all-pos)))))
 
 (defn draw [state]
   (println "state:" state)

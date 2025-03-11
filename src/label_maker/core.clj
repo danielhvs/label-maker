@@ -50,6 +50,26 @@
 ;; {:w 420.5, :h 148.75, :x 174.5, :y 692.25}
 ;; {:w 420.5, :h 297.5, :x 174.5, :y 543.5}
 
+(def widths
+  (for [n (range 1 7)]
+    (let [w (* n (/ W 8.0))]
+      {:w w})))
+
+(defn prev-key [kw]
+  (keyword
+   (str "w"
+        (dec (Integer/valueOf (apply str (rest (name kw))))))))
+
+(do
+  (defn the-widths []
+    (reduce (fn [acc n]
+              (println "n:" n)
+              (let [w (* n (/ W 8.0))]
+                (assoc acc (keyword (str "w" n))  w)))
+            {}
+            (range 1 7)))
+  (the-widths))
+
 (def arbitrary-positions
   "x y w h"
   (let [first-w 90
@@ -60,6 +80,27 @@
      [105 0 (* first-w f1) 0]
      [285 0 (* first-w f1 f2) 0 0]
      [0 385 (* first-w f1 f2 f3) 0 0]]))
+
+(def arbitrary-positions
+  "x y w h"
+  (let [w-and-ys
+        (mapv #(select-keys % [:w :y])
+              (let [the-map
+                    {:w1 74.375, :w2 148.75, :w3 223.125, :w4 297.5, :w5 371.875, :w6 446.25}]
+                (reduce-kv (fn [acc k v]
+                             (conj acc
+                                   (merge
+                                    {k v}
+                                    {:w v}
+                                    {:y
+                                     (or ((prev-key k) (first (filter (prev-key k) acc))) ;; FIXME sum up all the prev-keys
+                                         0)})))
+                           []
+                           the-map)))]
+    (mapv
+     (fn [{:keys [y w]}]
+       [0 y w 0])
+     w-and-ys)))
 
 (defn setup-fn [picture]
   (q/frame-rate 10)

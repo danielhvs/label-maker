@@ -97,9 +97,10 @@
       (let [new-state (-> state
                           (update :images update-imgs!)
                           (assoc :ready-to-draw true))]
-        (run! (fn [{:keys [img w h]}] (q/resize img w h))
-              (:images new-state))
-        new-state)
+        (when-not (:resized state)
+          (run! (fn [{:keys [img w h]}] (q/resize img w h))
+                (:images new-state)))
+        (assoc new-state :resized true))
       {:images  (:images state)
        :all-pos (positions (sizes))
        :done    (:done state)})))

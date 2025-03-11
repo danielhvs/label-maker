@@ -49,72 +49,74 @@
 
 (do
   (defn calculate-pos [w h qtd-w qtd-h size-w size-h]
-    (let [h-size (max size-h (quot h qtd-h))
-          w-size (max size-w (quot w qtd-w))]
-      (let [ys (filter #(= 0 (rem % h-size)) (range h))
-            xs (filter #(= 0 (rem % w-size)) (range w))]
-        (for [x xs y ys]
-          [x y]))))
-  (calculate-pos W H 8 2 20 20))
+    (positions (sizes))
+    #_(let [h-size (max size-h (quot h qtd-h))
+            w-size (max size-w (quot w qtd-w))]
+        (let [ys (filter #(= 0 (rem % h-size)) (range h))
+              xs (filter #(= 0 (rem % w-size)) (range w))]
+          (for [x xs y ys]
+            [x y]))))
+  #_(calculate-pos W H 8 2 20 20))
 ;; ([0 0] [0 5] [5 0] [5 5])
 
+#_(map (fn [x y] [x y])
+       [1 2 3]
+       ["a" "b" "c"])
+
 (defn setup [picture]
-  ; Set frame rate frames per second.
   (q/frame-rate 10)
-  ; Set color mode to HSB (HSV) instead of default RGB.
   (q/color-mode :hsb)
-  ; setup function returns initial state. It contains
-  ; circle color and position.
-  {:image (q/load-image (or picture "resources/test.png"))
-   :qtd-w 1
-   :qtd-h 1})
-
-(defn key-to-offset-w [key]
-  (case (:key key)
-    :left dec
-    :right inc
-    identity))
-
-(defn key-to-offset-h [key]
-  (case (:key key)
-    :up dec
-    :down inc
-    identity))
+  (let [the-imgs [(q/load-image (or picture "resources/test.png"))
+                  (q/load-image (or picture "resources/test.png"))]]
+    {:images (mapv (fn [img] {:img img}) the-imgs)}))
 
 (defn the-key-handler [state k]
-  (assoc state
-         :qtd-w (max 1 ((key-to-offset-w k) (:qtd-w state)))
-         :qtd-h (max 1 ((key-to-offset-h k) (:qtd-h state)))
-         :done (= ENTER (:key-code k))))
+  (assoc state :done (= ENTER (:key-code k))))
 
-(defn update [state]
-  (println "state:" state)
-  (let [img   (:image state)
-        qtd-w (:qtd-w state)
-        qtd-h (:qtd-h state)]
-    (if (q/loaded? img)
-      {:image   img
-       :all-pos (calculate-pos W H qtd-w qtd-h (.width img) (.height img))
-       :qtd-w   qtd-w
-       :qtd-h   qtd-h
-       :done    (:done state)}
-      {:image img
-       :qtd-w qtd-w
-       :qtd-h qtd-h
-       :done  (:done state)})))
+(defn update-imgs!  [imgs]
+  (let [res (mapv (fn [img [x y w h]]
+                    (merge img {:w w :x x :y y :h h}))
+                  imgs
+                  [[0 0 10 10] [20 20 20 20]])]
+    (println "update-imgsres:" res)
+    res))
+
+#_(:ready-to-draw state)
+
+(defn check-loaded  [img]
+  (if (q/loaded? (:img img))
+    (assoc img :ready? true)
+    img))
+
+;; (q/resize img w h)
+
+(defn update-fn [state]
+  (let [imgs    (:images state)
+        loaded? (count (map :ready? (map check-loaded imgs)))]
+    (if (= loaded? 2)
+      (let [new-state (-> state
+                          (update :images update-imgs!)
+                          (assoc :ready-to-draw true))]
+        (run! (fn [{:keys [img w h]}] (q/resize img w h))
+              (:images new-state))
+        new-state)
+      {:images  (:images state)
+       :all-pos (positions (sizes))
+       :done    (:done state)})))
 
 (defn draw-labels [state]
-  (let [img (:image state)]
-    (when-let [all-pos (:all-pos state)]
-      (do
-        (q/background 255)
-        (mapv (fn draw [[x y]]
-                (q/image img x y))
-              all-pos)))))
+  (let [imgs (:images state)]
+    (do
+      (q/background 255)
+      (mapv (fn draw [{:keys [img x y]}]
+              (println "draw:" draw)
+              (println "y:" y)
+              (println "x:" x)
+              (q/image img x y))
+            imgs))))
 
 (defn draw [state]
-  (println "state:" state)
-  (when (:all-pos state)
+  (when (:ready-to-draw state)
     (when (:done state)
       (q/do-record (q/create-graphics W H :pdf "out.pdf")
                    (draw-labels state))
@@ -130,7 +132,7 @@
                                         ; setup function called only once, during sketch initialization.
     :setup (partial setup picture-path)
                                         ; update is called on each iteration before draw.
-    :update update
+    :update update-fn
     :draw draw
     :features [:keep-on-top]
     :key-pressed the-key-handler
@@ -140,5 +142,5 @@
     :middleware [m/fun-mode m/pause-on-error]))
 
 (comment
-  (-main "/home/danielhabib/Downloads/some-file.png")
+  (-main "/home/danielhabib/Downloads/visualization.png")
   (-main))

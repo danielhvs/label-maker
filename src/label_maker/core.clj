@@ -47,35 +47,18 @@
 (comment
   (positions (sizes)))
 
-(do
-  (defn calculate-pos [w h qtd-w qtd-h size-w size-h]
-    (positions (sizes))
-    #_(let [h-size (max size-h (quot h qtd-h))
-            w-size (max size-w (quot w qtd-w))]
-        (let [ys (filter #(= 0 (rem % h-size)) (range h))
-              xs (filter #(= 0 (rem % w-size)) (range w))]
-          (for [x xs y ys]
-            [x y]))))
-  #_(calculate-pos W H 8 2 20 20))
-;; ([0 0] [0 5] [5 0] [5 5])
-
-#_(map (fn [x y] [x y])
-       [1 2 3]
-       ["a" "b" "c"])
+(def posss
+  "x y w h"
+  [[0 0 10 10]])
 
 (defn setup [picture]
   (q/frame-rate 10)
   (q/color-mode :hsb)
-  (let [the-imgs [(q/load-image (or picture "resources/test.png"))
-                  (q/load-image (or picture "resources/test.png"))]]
+  (let [the-imgs (repeatedly (count posss) #(q/load-image (or picture "resources/test.png")))]
     {:images (mapv (fn [img] {:img img}) the-imgs)}))
 
 (defn the-key-handler [state k]
   (assoc state :done (= ENTER (:key-code k))))
-
-(def posss
-  "x y w h"
-  [[0 0 10 10] [20 20 20 20]])
 
 (defn update-images  [imgs]
   (mapv (fn [img [x y w h]]
@@ -95,7 +78,7 @@
 (defn update-fn [state]
   (let [imgs    (:images state)
         loaded? (count (map :ready? (map check-loaded imgs)))]
-    (if (= loaded? 2)
+    (if (= loaded? (count posss))
       (let [new-state (-> state
                           (update :images update-images)
                           (assoc :ready-to-draw true))]

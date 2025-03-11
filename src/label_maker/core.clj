@@ -13,6 +13,40 @@
 (def H (int (mm-to-px 297)))
 (def ENTER 10)
 
+;; W 595
+;; H 841
+
+(defn sizes []
+  (let [w-count 4
+        w-size  (/ W w-count)
+        w-mults [1.0 2.0]
+        h-count 8
+        h-size  (/ H h-count)
+        h-mults [1.0 2.0 4.0]
+        the-map {:w-size (mapv #(* % h-size) h-mults)
+                 :h-size (mapv #(* % w-size) w-mults)}]
+    (let [[ws hs] (vals the-map)]
+      (for [w ws
+            h hs]
+        {:w w
+         :h h}))))
+
+(defn position [size]
+  (let [w   (:w size)
+        h   (:h size)
+        res (merge size
+                   {:x (- W w)
+                    :y (- H h)})]
+    (println "res:" res)
+    res))
+
+(defn positions [sizes]
+  (println "sizes:" sizes)
+  (map position sizes))
+
+(comment
+  (positions (sizes)))
+
 (do
   (defn calculate-pos [w h qtd-w qtd-h size-w size-h]
     (let [h-size (max size-h (quot h qtd-h))
@@ -21,7 +55,7 @@
             xs (filter #(= 0 (rem % w-size)) (range w))]
         (for [x xs y ys]
           [x y]))))
-  (calculate-pos 10 10 2 2 2 2))
+  (calculate-pos W H 8 2 20 20))
 ;; ([0 0] [0 5] [5 0] [5 5])
 
 (defn setup [picture]
@@ -93,16 +127,16 @@
   (q/defsketch label-maker
     :title "Label Maker"
     :size [W H]
-    ; setup function called only once, during sketch initialization.
+                                        ; setup function called only once, during sketch initialization.
     :setup (partial setup picture-path)
-    ; update is called on each iteration before draw.
+                                        ; update is called on each iteration before draw.
     :update update
     :draw draw
     :features [:keep-on-top]
     :key-pressed the-key-handler
-    ; This sketch uses functional-mode middleware.
-    ; Check quil wiki for more info about middlewares and particularly
-    ; fun-mode.
+                                        ; This sketch uses functional-mode middleware.
+                                        ; Check quil wiki for more info about middlewares and particularly
+                                        ; fun-mode.
     :middleware [m/fun-mode m/pause-on-error]))
 
 (comment

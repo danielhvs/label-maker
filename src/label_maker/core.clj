@@ -68,7 +68,10 @@
 
 (defn update-images  [imgs]
   (mapv (fn [img [x y w h]]
-          (merge img {:w w :x x :y y :h h}))
+          (merge img
+                 {:img-w (.width (:img img))
+                  :img-h (.height (:img img))}
+                 {:w w :x x :y y :h h}))
         imgs
         arbitrary-positions))
 
@@ -78,14 +81,16 @@
     img))
 
 (defn- maybe-resize-images [state]
-  (let [new-state (-> state
-                      (update :images update-images)
-                      (assoc :ready-to-draw true))]
-    (when-not (:resized state)
-      (run! (fn [{:keys [img w h]}]
-              (q/resize img w h))
-            (:images new-state)))
-    (assoc new-state :resized true)))
+  (let [next-state (let [new-state (-> state
+                                       (update :images update-images)
+                                       (assoc :ready-to-draw true))]
+                     (when-not (:resized state)
+                       (run! (fn [{:keys [img w h]}]
+                               (q/resize img w h))
+                             (:images new-state)))
+                     (assoc new-state :resized true))]
+    (println "next-state:" next-state)
+    next-state))
 
 (defn update-fn [state]
   (let [imgs    (:images state)

@@ -24,37 +24,43 @@
         h-size  (/ H h-count)
         h-mults [1.0 2.0 4.0]
         the-map {:w-size (mapv #(* % h-size) h-mults)
-                 :h-size (mapv #(* % w-size) w-mults)}]
-    (let [[ws hs] (vals the-map)]
-      (for [w ws
-            h hs]
-        {:w w
-         :h h}))))
+                 :h-size (mapv #(* % w-size) w-mults)}
+        [ws hs] (vals the-map)]
+    (for [w ws
+          h hs]
+      {:w w
+       :h h})))
 
 (defn position [size]
-  (let [w   (:w size)
-        h   (:h size)
-        res (merge size
-                   {:x (- W w)
-                    :y (- H h)})]
-    (println "res:" res)
-    res))
+  (let [w (:w size)
+        h (:h size)]
+    (merge size
+           {:x (- W w)
+            :y (- H h)})))
 
 (defn positions [sizes]
-  (println "sizes:" sizes)
   (map position sizes))
 
 (comment
   (positions (sizes)))
+;; {:w 105.125, :h 148.75, :x 489.875, :y 692.25}
+;; {:w 105.125, :h 297.5, :x 489.875, :y 543.5}
+;; {:w 210.25, :h 148.75, :x 384.75, :y 692.25}
+;; {:w 210.25, :h 297.5, :x 384.75, :y 543.5}
+;; {:w 420.5, :h 148.75, :x 174.5, :y 692.25}
+;; {:w 420.5, :h 297.5, :x 174.5, :y 543.5}
 
-(def posss
+(def arbitrary-positions
   "x y w h"
-  [[0 0 10 10]])
+  [[0 0 105 0]
+   [105 0 210 0]
+   [0 150 385 0]])
 
-(defn setup [picture]
+(defn setup-fn [picture]
   (q/frame-rate 10)
   (q/color-mode :hsb)
-  (let [the-imgs (repeatedly (count posss) #(q/load-image (or picture "resources/test.png")))]
+  (let [the-imgs (repeatedly (count arbitrary-positions)
+                             #(q/load-image (or picture "resources/test.png")))]
     {:images (mapv (fn [img] {:img img}) the-imgs)}))
 
 (defn the-key-handler [state k]
@@ -64,44 +70,39 @@
   (mapv (fn [img [x y w h]]
           (merge img {:w w :x x :y y :h h}))
         imgs
-        posss))
-
-#_(:ready-to-draw state)
+        arbitrary-positions))
 
 (defn check-loaded  [img]
   (if (q/loaded? (:img img))
     (assoc img :ready? true)
     img))
 
-;; (q/resize img w h)
+(defn- maybe-resize-images [state]
+  (let [new-state (-> state
+                      (update :images update-images)
+                      (assoc :ready-to-draw true))]
+    (when-not (:resized state)
+      (run! (fn [{:keys [img w h]}]
+              (q/resize img w h))
+            (:images new-state)))
+    (assoc new-state :resized true)))
 
 (defn update-fn [state]
   (let [imgs    (:images state)
         loaded? (count (map :ready? (map check-loaded imgs)))]
-    (if (= loaded? (count posss))
-      (let [new-state (-> state
-                          (update :images update-images)
-                          (assoc :ready-to-draw true))]
-        (when-not (:resized state)
-          (run! (fn [{:keys [img w h]}] (q/resize img w h))
-                (:images new-state)))
-        (assoc new-state :resized true))
-      {:images  (:images state)
-       :all-pos (positions (sizes))
-       :done    (:done state)})))
+    (if (= loaded? (count arbitrary-positions))
+      (maybe-resize-images state)
+      {:images (:images state)
+       :done   (:done state)})))
 
 (defn draw-labels [state]
+  (q/background 255)
   (let [imgs (:images state)]
-    (do
-      (q/background 255)
-      (mapv (fn draw [{:keys [img x y]}]
-              (println "draw:" draw)
-              (println "y:" y)
-              (println "x:" x)
-              (q/image img x y))
-            imgs))))
+    (mapv (fn draw [{:keys [img x y]}]
+            (q/image img x y))
+          imgs)))
 
-(defn draw [state]
+(defn draw-fn [state]
   (when (:ready-to-draw state)
     (when (:done state)
       (q/do-record (q/create-graphics W H :pdf "out.pdf")
@@ -116,10 +117,10 @@
     :title "Label Maker"
     :size [W H]
                                         ; setup function called only once, during sketch initialization.
-    :setup (partial setup picture-path)
+    :setup (partial setup-fn picture-path)
                                         ; update is called on each iteration before draw.
     :update update-fn
-    :draw draw
+    :draw draw-fn
     :features [:keep-on-top]
     :key-pressed the-key-handler
                                         ; This sketch uses functional-mode middleware.
@@ -128,5 +129,5 @@
     :middleware [m/fun-mode m/pause-on-error]))
 
 (comment
-  (-main "/home/danielhabib/Downloads/visualization.png")
+  (-main "/home/danielhabib/Downloads/pensador.jpg")
   (-main))

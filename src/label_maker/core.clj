@@ -13,16 +13,18 @@
 (def H (int (mm-to-px 297)))
 (def ENTER 10)
 
-(defn calculate-pos [w h qtd-w qtd-h size-w size-h]
-  (let [h-size (max size-h (quot h qtd-h))
-        w-size (max size-w (quot w qtd-w))]
-    (let [ys (filter #(= 0 (rem % h-size)) (range h))
-          xs (filter #(= 0 (rem % w-size)) (range w))]
-      (for [x xs y ys]
-        [x y]))))
+(do
+  (defn calculate-pos [w h qtd-w qtd-h size-w size-h]
+    (let [h-size (max size-h (quot h qtd-h))
+          w-size (max size-w (quot w qtd-w))]
+      (let [ys (filter #(= 0 (rem % h-size)) (range h))
+            xs (filter #(= 0 (rem % w-size)) (range w))]
+        (for [x xs y ys]
+          [x y]))))
+  (calculate-pos 10 10 2 2 2 2))
+;; ([0 0] [0 5] [5 0] [5 5])
 
 (defn setup [picture]
-  (println "picture:" picture)
   ; Set frame rate frames per second.
   (q/frame-rate 10)
   ; Set color mode to HSB (HSV) instead of default RGB.
@@ -52,20 +54,21 @@
          :done (= ENTER (:key-code k))))
 
 (defn update [state]
-  (let [img (:image state)
-        next {:image img}
+  (println "state:" state)
+  (let [img   (:image state)
+        next  {:image img}
         qtd-w (:qtd-w state)
         qtd-h (:qtd-h state)]
     (if (q/loaded? img)
-      {:image img
+      {:image   img
        :all-pos (calculate-pos W H qtd-w qtd-h (.width img) (.height img))
-       :qtd-w qtd-w
-       :qtd-h qtd-h
-       :done (:done state)}
+       :qtd-w   qtd-w
+       :qtd-h   qtd-h
+       :done    (:done state)}
       {:image img
        :qtd-w qtd-w
        :qtd-h qtd-h
-       :done (:done state)})))
+       :done  (:done state)})))
 
 (defn draw-labels [state]
   (let [img (:image state)]

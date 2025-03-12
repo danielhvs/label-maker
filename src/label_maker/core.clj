@@ -36,7 +36,7 @@
   [{:keys [w h] :as img}]
   (let [amount (fit-amount w h)]
     (calculate-positions* w h amount)))
-(comment (calculate-positions {:w 50 :h 10}))
+(comment (calculate-positions {:w 5000 :h 1000}))
 
 (defn sizes []
   (let [w-count 4
@@ -159,35 +159,35 @@
     next-state))
 
 (defn- calculate-state-positions [{:keys [image resized] :as state}]
-  (let [next-state (let [positions (calculate-positions {:w (.width image)
-                                                         :h (.height image)})
-                         new-state (assoc state
-                                          :positions positions
-                                          :ready-to-draw true)]
-                     #_(when-not resized
-                         (run! (fn [{:keys [img w h]}]
-                                 (q/resize img w h))
-                               (:images new-state)))
-                     (assoc new-state :resized true))]
+  (let [next-state
+        (let [resize-to 60
+              bla       {:w resize-to
+                         :h 60}
+              positions (calculate-positions bla)]
+          (when-not resized
+            (q/resize image resize-to 0))
+          (assoc state :positions positions :resized true))]
     (println "next-state:" next-state)
     next-state))
 
 (defn update-fn [state]
-  (let [img     (:image state)
-        loaded? (q/loaded? img)]
-    (if loaded?
-      (calculate-state-positions state)
-      state)))
+  (let [image   (:image state)
+        loaded? (q/loaded? image)]
+    (cond
+      (:resized state) state
+      loaded?          (calculate-state-positions state)
+      :else            state)))
 
 (defn draw-labels [state]
   (q/background 255)
   (when-let [positions (:positions state)]
+    (println "draw-labels state:" positions)
     (mapv (fn draw [[x y]]
             (q/image (:image state) x y))
           positions)))
 
 (defn draw-fn [state]
-  (when (:ready-to-draw state)
+  (when (:resized state)
     (when (:done state)
       (q/do-record (q/create-graphics W H :pdf "out.pdf")
                    (draw-labels state))

@@ -16,6 +16,10 @@
 ;; W 595
 ;; H 841
 
+(defn sizes-to-resize [n intial step]
+  (take n (iterate (partial * step) intial)))
+(comment (sizes-to-resize 8 50 1.25))
+
 (defn fit-amount
   "How many pics fits in the whole page"
   [pic-w pic-h]
@@ -38,21 +42,6 @@
     (calculate-positions* w h amount)))
 (comment (calculate-positions {:w 5000 :h 1000}))
 
-(defn sizes []
-  (let [w-count 4
-        w-size  (/ W w-count)
-        w-mults [1.0 2.0]
-        h-count 8
-        h-size  (/ H h-count)
-        h-mults [1.0 2.0 4.0]
-        the-map {:w-size (mapv #(* % h-size) h-mults)
-                 :h-size (mapv #(* % w-size) w-mults)}
-        [ws hs] (vals the-map)]
-    (for [w ws
-          h hs]
-      {:w w
-       :h h})))
-
 (defn position [size]
   (let [w (:w size)
         h (:h size)]
@@ -62,15 +51,6 @@
 
 (defn positions [sizes]
   (map position sizes))
-
-(comment
-  (positions (sizes)))
-;; {:w 105.125, :h 148.75, :x 489.875, :y 692.25}
-;; {:w 105.125, :h 297.5, :x 489.875, :y 543.5}
-;; {:w 210.25, :h 148.75, :x 384.75, :y 692.25}
-;; {:w 210.25, :h 297.5, :x 384.75, :y 543.5}
-;; {:w 420.5, :h 148.75, :x 174.5, :y 692.25}
-;; {:w 420.5, :h 297.5, :x 174.5, :y 543.5}
 
 (def widths
   (for [n (range 1 7)]

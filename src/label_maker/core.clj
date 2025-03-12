@@ -127,9 +127,7 @@
 (defn setup-fn [picture]
   (q/frame-rate 10)
   (q/color-mode :hsb)
-  (let [the-imgs (repeatedly (count arbitrary-positions)
-                             #(q/load-image (or picture "resources/test.png")))]
-    {:images (mapv (fn [img] {:img img}) the-imgs)}))
+  {:image (q/load-image (or picture "resources/test.png"))})
 
 (defn the-key-handler [state k]
   (assoc state :done (= ENTER (:key-code k))))
@@ -148,7 +146,7 @@
     (assoc img :ready? true)
     img))
 
-(defn- maybe-resize-images [state]
+(defn- maybe-resize-images-old [state]
   (let [next-state (let [new-state (-> state
                                        (update :images update-images)
                                        (assoc :ready-to-draw true))]
@@ -160,20 +158,33 @@
     (println "next-state:" next-state)
     next-state))
 
+(defn- calculate-state-positions [{:keys [image resized] :as state}]
+  (let [next-state (let [positions (calculate-positions {:w (.width image)
+                                                         :h (.height image)})
+                         new-state (assoc state
+                                          :positions positions
+                                          :ready-to-draw true)]
+                     #_(when-not resized
+                         (run! (fn [{:keys [img w h]}]
+                                 (q/resize img w h))
+                               (:images new-state)))
+                     (assoc new-state :resized true))]
+    (println "next-state:" next-state)
+    next-state))
+
 (defn update-fn [state]
-  (let [imgs    (:images state)
-        loaded? (count (map :ready? (map check-loaded imgs)))]
-    (if (= loaded? (count arbitrary-positions))
-      (maybe-resize-images state)
-      {:images (:images state)
-       :done   (:done state)})))
+  (let [img     (:image state)
+        loaded? (q/loaded? img)]
+    (if loaded?
+      (calculate-state-positions state)
+      state)))
 
 (defn draw-labels [state]
   (q/background 255)
-  (let [imgs (:images state)]
-    (mapv (fn draw [{:keys [img x y]}]
-            (q/image img x y))
-          imgs)))
+  (when-let [positions (:positions state)]
+    (mapv (fn draw [[x y]]
+            (q/image (:image state) x y))
+          positions)))
 
 (defn draw-fn [state]
   (when (:ready-to-draw state)

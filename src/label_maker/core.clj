@@ -18,7 +18,7 @@
 
 (defn sizes-to-resize [n intial step]
   (take n (iterate (partial * step) intial)))
-(comment (sizes-to-resize 8 50 1.25))
+(comment (sizes-to-resize 4 60 1.25))
 
 (defn fit-amount
   "How many pics fits in the whole page"
@@ -107,12 +107,15 @@
 (defn setup-fn [picture]
   (q/frame-rate 10)
   (q/color-mode :hsb)
-  {:image (q/load-image (or picture "resources/test.png"))})
+  (let [sizes (sizes-to-resize 4 60 1.25)]
+    {:image           (q/load-image (or picture "resources/test.png"))
+     :sizes-to-resize sizes
+     :images          (repeatedly (count sizes) (q/load-image (or picture "resources/test.png")))}))
 
 (defn the-key-handler [state k]
   (assoc state :done (= ENTER (:key-code k))))
 
-(defn update-images  [imgs]
+(defn update-images [imgs]
   (mapv (fn [img [x y w h]]
           (merge img
                  {:img-w (.width (:img img))
@@ -121,14 +124,9 @@
         imgs
         arbitrary-positions))
 
-(defn check-loaded  [img]
-  (if (q/loaded? (:img img))
-    (assoc img :ready? true)
-    img))
-
 (defn- maybe-resize-images-old [state]
   (let [next-state (let [new-state (-> state
-                                       (update :images update-images)
+                                       (update :images update-images) ;; assoc x and y
                                        (assoc :ready-to-draw true))]
                      (when-not (:resized state)
                        (run! (fn [{:keys [img w h]}]
@@ -151,12 +149,19 @@
     next-state))
 
 (defn update-fn [state]
-  (let [image   (:image state)
-        loaded? (q/loaded? image)]
+  (let [images  (:images state)
+        loaded? (every? q/loaded? images)]
     (cond
-      (:resized state) state
-      loaded?          (calculate-state-positions state)
-      :else            state)))
+      loaded? (maybe-resize-images-old state)
+      :else   state)))
+
+#_(defn update-fn [state]
+    (let [image   (:image state)
+          loaded? (q/loaded? image)]
+      (cond
+        (:resized state) state
+        loaded?          (calculate-state-positions state)
+        :else            state)))
 
 (defn draw-labels [state]
   (q/background 255)

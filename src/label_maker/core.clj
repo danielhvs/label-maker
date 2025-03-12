@@ -16,6 +16,14 @@
 ;; W 595
 ;; H 841
 
+(defn fit-amount
+  "How many pics fits in the whole page"
+  [pic-w pic-h]
+  (let [w-count    (/ W pic-w)
+        h-count    (/ H pic-h)
+        fit-amount (apply min [w-count h-count])]
+    (int fit-amount)))
+
 (defn sizes []
   (let [w-count 4
         w-size  (/ W w-count)

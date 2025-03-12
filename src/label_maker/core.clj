@@ -24,6 +24,20 @@
         fit-amount (apply min [w-count h-count])]
     (int fit-amount)))
 
+(defn calculate-positions* [pic-w pic-h amount]
+  (reduce (fn [acc n]
+            (conj acc
+                  [(* n pic-w) (* n pic-h)]))
+          []
+          (range amount)))
+
+(defn calculate-positions
+  "Returns xs and ys for the picture"
+  [{:keys [w h] :as img}]
+  (let [amount (fit-amount w h)]
+    (calculate-positions* w h amount)))
+(comment (calculate-positions {:w 50 :h 10}))
+
 (defn sizes []
   (let [w-count 4
         w-size  (/ W w-count)

@@ -59,7 +59,7 @@
 (defn setup-fn [picture]
   (q/frame-rate 10)
   (q/color-mode :hsb)
-  (let [sizes  (sizes-to-resize 4 60 2)
+  (let [sizes  (sizes-to-resize 10 30 1.5) ;; FIXME configure
         images (for [size sizes]
                  {:image (q/load-image (or picture "resources/test.png"))
                   :size  size})]

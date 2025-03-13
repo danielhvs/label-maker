@@ -43,7 +43,7 @@
 (comment (calculate-positions {:w 50 :h 10}))
 
 (defn calculate-ys
-  "Returns xs and ys for the picture"
+  "Returns ys for the picture"
   [images]
   (reduce
    (fn [acc item]
@@ -54,7 +54,7 @@
    images))
 
 (defn update-state-ys [state]
-  (update  state :images calculate-ys))
+  (update state :images calculate-ys))
 
 (defn setup-fn [picture]
   (q/frame-rate 10)
@@ -74,25 +74,20 @@
         (:images state))
   state)
 
-(defn- assoc-position [image-map]
-  (assoc image-map :positions (calculate-positions image-map)))
-
-(defn- assoc-positions [images]
-  (mapv assoc-position images))
-
 (defn- update-images-positions [state]
-  (update state :images assoc-positions))
-
-(defn- assoc-w-h [{:keys [image], :as image-map}]
-  (assoc image-map
-         :w (.width image)
-         :h (.height image)))
-
-(defn- assoc-w-hs [images]
-  (mapv assoc-w-h images))
+  (update state :images
+          (fn [images]
+            (mapv #(assoc %
+                          :positions
+                          (calculate-positions %)) images))))
 
 (defn- update-images-w-hs [state]
-  (update state :images assoc-w-hs))
+  (update state :images
+          (fn [images]
+            (mapv #(assoc %
+                          :w (-> % :image .width)
+                          :h (-> % :image .height))
+                  images))))
 
 (defn mark-ready [state]
   (assoc state :ready true))

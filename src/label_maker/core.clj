@@ -40,7 +40,7 @@
   [{:keys [w h] :as img}]
   (let [amount (fit-amount w h)]
     (calculate-positions* w h amount)))
-(comment (calculate-positions {:w 5000 :h 1000}))
+(comment (calculate-positions {:w 50 :h 10}))
 
 (defn position [size]
   (let [w (:w size)
@@ -61,16 +61,6 @@
   (keyword
    (str "w"
         (dec (Integer/valueOf (apply str (rest (name kw))))))))
-
-(do
-  (defn the-widths []
-    (reduce (fn [acc n]
-              (println "n:" n)
-              (let [w (* n (/ W 8.0))]
-                (assoc acc (keyword (str "w" n))  w)))
-            {}
-            (range 1 7)))
-  (the-widths))
 
 (def arbitrary-positions
   "x y w h"
@@ -107,72 +97,70 @@
 (defn setup-fn [picture]
   (q/frame-rate 10)
   (q/color-mode :hsb)
-  (let [sizes (sizes-to-resize 4 60 1.25)]
-    {:image           (q/load-image (or picture "resources/test.png"))
-     :sizes-to-resize sizes
-     :images          (repeatedly (count sizes) (q/load-image (or picture "resources/test.png")))}))
+  (let [sizes  (sizes-to-resize 4 60 1.25)
+        images (for [size sizes]
+                 {:image (q/load-image (or picture "resources/test.png"))
+                  :size  size})]
+    {:images images}))
 
 (defn the-key-handler [state k]
   (assoc state :done (= ENTER (:key-code k))))
 
-(defn update-images [imgs]
-  (mapv (fn [img [x y w h]]
-          (merge img
-                 {:img-w (.width (:img img))
-                  :img-h (.height (:img img))}
-                 {:w w :x x :y y :h h}))
-        imgs
-        arbitrary-positions))
+(defn- resize-images! [state]
+  (run! (fn [{:keys [image size]}]
+          (q/resize image size 0))
+        (:images state))
+  state)
 
-(defn- maybe-resize-images-old [state]
-  (let [next-state (let [new-state (-> state
-                                       (update :images update-images) ;; assoc x and y
-                                       (assoc :ready-to-draw true))]
-                     (when-not (:resized state)
-                       (run! (fn [{:keys [img w h]}]
-                               (q/resize img w h))
-                             (:images new-state)))
-                     (assoc new-state :resized true))]
-    (println "next-state:" next-state)
-    next-state))
+(defn- assoc-position [image-map]
+  (assoc image-map :positions (calculate-positions image-map)))
 
-(defn- calculate-state-positions [{:keys [image resized] :as state}]
-  (let [next-state
-        (let [resize-to 60
-              bla       {:w resize-to
-                         :h 60}
-              positions (calculate-positions bla)]
-          (when-not resized
-            (q/resize image resize-to 0))
-          (assoc state :positions positions :resized true))]
-    (println "next-state:" next-state)
-    next-state))
+(defn- assoc-positions [images]
+  (mapv assoc-position images))
 
-(defn update-fn [state]
-  (let [images  (:images state)
-        loaded? (every? q/loaded? images)]
+(defn- update-images-positions [state]
+  (update state :images assoc-positions))
+
+(defn- assoc-w-h [{:keys [image], :as image-map}]
+  (assoc image-map
+         :w (.width image)
+         :h (.height image)))
+
+(defn- assoc-w-hs [images]
+  (mapv assoc-w-h images))
+
+(defn- update-images-w-hs [state]
+  (update state :images assoc-w-hs))
+
+(defn mark-ready [state]
+  (assoc state :ready true))
+
+(defn update-fn [{:keys [images ready], :as state}]
+  (let [loaded? (every? q/loaded? (map :image images))]
+    (println "loaded?:" loaded?)
+    (println "ready:" ready)
     (cond
-      loaded? (maybe-resize-images-old state)
+      ready   state
+      loaded? (-> state
+                  resize-images!
+                  update-images-w-hs
+                  update-images-positions
+                  mark-ready)
       :else   state)))
-
-#_(defn update-fn [state]
-    (let [image   (:image state)
-          loaded? (q/loaded? image)]
-      (cond
-        (:resized state) state
-        loaded?          (calculate-state-positions state)
-        :else            state)))
 
 (defn draw-labels [state]
   (q/background 255)
-  (when-let [positions (:positions state)]
-    (println "draw-labels state:" positions)
-    (mapv (fn draw [[x y]]
-            (q/image (:image state) x y))
-          positions)))
+  (when (:ready state)
+    (mapv (fn draw [{:keys [image positions]}]
+            (run!
+             (fn [position]
+               (let [[x y] position]
+                 (q/image image x y)))
+             positions))
+          (:images state))))
 
 (defn draw-fn [state]
-  (when (:resized state)
+  (when (:ready state)
     (when (:done state)
       (q/do-record (q/create-graphics W H :pdf "out.pdf")
                    (draw-labels state))

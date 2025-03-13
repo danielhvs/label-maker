@@ -59,7 +59,7 @@
 (defn setup-fn [picture]
   (q/frame-rate 10)
   (q/color-mode :hsb)
-  (let [sizes  (sizes-to-resize 10 30 1.5) ;; FIXME configure
+  (let [sizes  (sizes-to-resize 10 40 1.5) ;; FIXME configure
         images (for [size sizes]
                  {:image (q/load-image (or picture "resources/test.png"))
                   :size  size})]
@@ -111,8 +111,10 @@
 
 (defn draw-labels [state]
   (q/background 255)
-  (mapv (fn draw [{:keys [image y]}]
-          (q/image image 0 y))
+  (mapv (fn draw [{:keys [image y w]}]
+          (run!
+           #(q/image image % y)
+           (range 0 W w)))
         (:images state)))
 
 (defn draw-fn [state]

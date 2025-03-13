@@ -37,67 +37,15 @@
 
 (defn calculate-positions
   "Returns xs and ys for the picture"
-  [{:keys [w h] :as img}]
+  [{:keys [w h] :as _image}]
   (let [amount (fit-amount w h)]
     (calculate-positions* w h amount)))
 (comment (calculate-positions {:w 50 :h 10}))
 
-(defn position [size]
-  (let [w (:w size)
-        h (:h size)]
-    (merge size
-           {:x (- W w)
-            :y (- H h)})))
-
-(defn positions [sizes]
-  (map position sizes))
-
-(def widths
-  (for [n (range 1 7)]
-    (let [w (* n (/ W 8.0))]
-      {:w w})))
-
-(defn prev-key [kw]
-  (keyword
-   (str "w"
-        (dec (Integer/valueOf (apply str (rest (name kw))))))))
-
-(def arbitrary-positions
-  "x y w h"
-  (let [first-w 90
-        f1      2.25
-        f2      1.5
-        f3      1.25]
-    [[0 0 first-w 0]
-     [105 0 (* first-w f1) 0]
-     [285 0 (* first-w f1 f2) 0 0]
-     [0 385 (* first-w f1 f2 f3) 0 0]]))
-
-(def arbitrary-positions
-  "x y w h"
-  (let [w-and-ys
-        (mapv #(select-keys % [:w :y])
-              (let [the-map
-                    {:w1 74.375, :w2 148.75, :w3 223.125, :w4 297.5, :w5 371.875, :w6 446.25}]
-                (reduce-kv (fn [acc k v]
-                             (conj acc
-                                   (merge
-                                    {k v}
-                                    {:w v}
-                                    {:y
-                                     (or ((prev-key k) (first (filter (prev-key k) acc))) ;; FIXME sum up all the prev-keys
-                                         0)})))
-                           []
-                           the-map)))]
-    (mapv
-     (fn [{:keys [y w]}]
-       [0 y w 0])
-     w-and-ys)))
-
 (defn setup-fn [picture]
   (q/frame-rate 10)
   (q/color-mode :hsb)
-  (let [sizes  (sizes-to-resize 4 60 1.25)
+  (let [sizes  (sizes-to-resize 4 60 2)
         images (for [size sizes]
                  {:image (q/load-image (or picture "resources/test.png"))
                   :size  size})]
@@ -135,10 +83,8 @@
 (defn mark-ready [state]
   (assoc state :ready true))
 
-(defn update-fn [{:keys [images ready], :as state}]
+(defn update-fn [{:keys [images ready] :as state}]
   (let [loaded? (every? q/loaded? (map :image images))]
-    (println "loaded?:" loaded?)
-    (println "ready:" ready)
     (cond
       ready   state
       loaded? (-> state
@@ -150,14 +96,13 @@
 
 (defn draw-labels [state]
   (q/background 255)
-  (when (:ready state)
-    (mapv (fn draw [{:keys [image positions]}]
-            (run!
-             (fn [position]
-               (let [[x y] position]
-                 (q/image image x y)))
-             positions))
-          (:images state))))
+  (mapv (fn draw [{:keys [image positions]}]
+          (run!
+           (fn [position]
+             (let [[x y] position]
+               (q/image image x y)))
+           positions))
+        (:images state)))
 
 (defn draw-fn [state]
   (when (:ready state)

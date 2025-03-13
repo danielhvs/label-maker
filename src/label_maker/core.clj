@@ -42,6 +42,20 @@
     (calculate-positions* w h amount)))
 (comment (calculate-positions {:w 50 :h 10}))
 
+(defn calculate-ys
+  "Returns xs and ys for the picture"
+  [images]
+  (reduce
+   (fn [acc item]
+     (conj acc
+           (assoc item :y
+                  (reduce + (map :h acc)))))
+   []
+   images))
+
+(defn update-state-ys [state]
+  (update  state :images calculate-ys))
+
 (defn setup-fn [picture]
   (q/frame-rate 10)
   (q/color-mode :hsb)
@@ -91,17 +105,14 @@
                   resize-images!
                   update-images-w-hs
                   update-images-positions
+                  update-state-ys
                   mark-ready)
       :else   state)))
 
 (defn draw-labels [state]
   (q/background 255)
-  (mapv (fn draw [{:keys [image positions]}]
-          (run!
-           (fn [position]
-             (let [[x y] position]
-               (q/image image x y)))
-           positions))
+  (mapv (fn draw [{:keys [image y]}]
+          (q/image image 0 y))
         (:images state)))
 
 (defn draw-fn [state]
